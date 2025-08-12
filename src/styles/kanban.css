@@ -1,0 +1,22 @@
+/* src/styles/kanban.css */
+
+.kanban-board {
+  padding: 10px 20px;
+  height: 100%;
+}
+
+.kanban-column {
+  flex: 1;
+  padding: 5px 50px;
+}
+
+.kanban-title {
+  text-align: center;
+  padding: 10px 10px;
+  margin-bottom: 15px;
+  border-bottom: none;
+}
+
+.with-border {
+  border-right: 1px solid #ccc;
+}
