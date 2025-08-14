@@ -2,8 +2,7 @@
 function normalizeStatus(sectionName) {
   if (!sectionName) return "To Do";
   const name = sectionName.toLowerCase();
-
-  if (name.includes("progress")) return "In Progress";
+  if (name.includes("progress") || name.includes("doing")) return "In Progress";
   if (name.includes("done")) return "Done";
   return "To Do";
 }
@@ -16,5 +15,7 @@ export function mapAsanaTask(task) {
     status: normalizeStatus(task.memberships?.[0]?.section?.name),
     assignee: task.assignee?.name || "Unassigned",
     dueDate: task.due_on || "N/A",
+    // keep raw for future PATCH/move work
+    _raw: task,
   };
 }

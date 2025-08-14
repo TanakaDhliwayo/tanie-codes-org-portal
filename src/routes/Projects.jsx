@@ -1,17 +1,14 @@
-import React, { useState, useEffect } from "react";
+// src/routes/Projects.jsx
+import React, { useEffect, useMemo, useState } from "react";
 import SearchBar from "../components/SearchBar";
 import Filter from "../components/Filter";
 import AddTask from "../components/AddTask";
 import KanbanBoard from "../components/KanbanBoard";
+import TaskModal from "../components/TaskModal";
+import { getTasks, updateTaskFields, moveTaskToSection } from "../api/asana";
+import { mapAsanaTask } from "../utils/taskMapper";
 
-// ✅ Helper to normalize section names into board statuses
-function normalizeStatus(sectionName) {
-  if (!sectionName) return "To Do";
-  const name = sectionName.toLowerCase();
-  if (name.includes("progress")) return "In Progress";
-  if (name.includes("done")) return "Done";
-  return "To Do";
-}
+const STATUSES = ["To Do", "In Progress", "Done"];
 
 const Projects = () => {
   const [tasks, setTasks] = useState([]);
@@ -19,66 +16,96 @@ const Projects = () => {
   const [filterAssignee, setFilterAssignee] = useState("");
   const [loading, setLoading] = useState(true);
 
+  // modal state
+  const [activeTask, setActiveTask] = useState(null); // object or null
+  const [isEditing, setIsEditing] = useState(false);
+
   useEffect(() => {
-    const fetchTasks = async () => {
+    (async () => {
       try {
-        const res = await fetch(
-          "https://api-test-triaseyg.flowgear.net/asana/task?auth-key=-3baO-4PbBqzZeb1_BvM7yEzN27fBzgwM80c9hT5vbAnI5pg-qA0nx31_4XQrXIeNp5pHrL1CqDiFcabxCoKHg"
-        );
-
-        const json = await res.json();
-        console.log("📥 Raw API response:", json);
-
-        let tasksArray = [];
-
-        if (Array.isArray(json.data)) {
-          tasksArray = json.data;
-        } else if (json.data && typeof json.data === "object") {
-          tasksArray = [json.data];
-        } else {
-          console.warn("⚠️ Unexpected API format:", json);
-        }
-
-        const mappedTasks = tasksArray.map((task) => ({
-          id: task.gid,
-          name: task.name,
-          description: task.notes || "No description",
-          status: normalizeStatus(task.memberships?.[0]?.section?.name),
-          assignee: task.assignee?.name || "Unassigned",
-          dueDate: task.due_on || "N/A",
-        }));
-
-        console.log("✅ Mapped Tasks:", mappedTasks);
-        setTasks(mappedTasks);
-      } catch (err) {
-        console.error("❌ Error fetching tasks:", err);
+        const raw = await getTasks();
+        const mapped = raw.map(mapAsanaTask);
+        setTasks(mapped);
+      } catch (e) {
+        console.error("Failed to load tasks:", e);
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchTasks();
+    })();
   }, []);
 
-  const addTask = (newTask) => {
-    setTasks((prev) => [...prev, newTask]);
+  const addTask = (newTask) => setTasks((prev) => [...prev, newTask]);
+
+  // Filter + search (memoized for perf/readability)
+  const filteredTasks = useMemo(() => {
+    const q = searchQuery.toLowerCase();
+    return tasks.filter((t) => {
+      const matchesSearch =
+        (t.name || "").toLowerCase().includes(q) ||
+        (t.description || "").toLowerCase().includes(q);
+      const matchesAssignee = filterAssignee
+        ? t.assignee === filterAssignee
+        : true;
+      return matchesSearch && matchesAssignee;
+    });
+  }, [tasks, searchQuery, filterAssignee]);
+
+  // ===== Drag & Drop =====
+  const onDragStart = (e, taskId) => {
+    e.dataTransfer.setData("text/taskId", String(taskId));
   };
 
-  const filteredTasks = tasks.filter((task) => {
-    const matchesSearch =
-      (task.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (task.description || "")
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
+  const onDropToStatus = async (e, newStatus) => {
+    e.preventDefault();
+    const taskId = e.dataTransfer.getData("text/taskId");
+    if (!taskId) return;
 
-    const matchesAssignee = filterAssignee
-      ? task.assignee === filterAssignee
-      : true;
+    // Optimistic UI update
+    setTasks((prev) =>
+      prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
+    );
 
-    return matchesSearch && matchesAssignee;
-  });
+    // TODO: Persist via Flowgear → Asana sections
+    try {
+      await moveTaskToSection(/* taskId, sectionGidMappedFrom(newStatus) */);
+    } catch (err) {
+      console.error("Move failed, reverting...", err);
+      // revert if needed (simple way: reload from server)
+      try {
+        const raw = await getTasks();
+        setTasks(raw.map(mapAsanaTask));
+      } catch {}
+    }
+  };
 
-  if (loading) return <p>Loading tasks...</p>;
+  // ===== Modal open/close =====
+  const openTask = (task, edit = false) => {
+    setActiveTask(task);
+    setIsEditing(edit);
+  };
+  const closeTask = () => {
+    setActiveTask(null);
+    setIsEditing(false);
+  };
+
+  // ===== Save edits (optimistic) =====
+  const saveTask = async (updated) => {
+    setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+    closeTask();
+
+    try {
+      await updateTaskFields(/* updated.id, buildPatchFrom(updated) */);
+    } catch (err) {
+      console.error("Save failed, reverting...", err);
+      // revert by refetching
+      try {
+        const raw = await getTasks();
+        setTasks(raw.map(mapAsanaTask));
+      } catch {}
+    }
+  };
+
+  if (loading) return <p className="m-4">Loading tasks...</p>;
 
   return (
     <div className="container mt-4 position-relative">
@@ -97,9 +124,26 @@ const Projects = () => {
         </div>
       </div>
 
-      <KanbanBoard tasks={filteredTasks} />
+      <KanbanBoard
+        statuses={STATUSES}
+        tasks={filteredTasks}
+        onDragStart={onDragStart}
+        onDropToStatus={onDropToStatus}
+        onCardClick={(t) => openTask(t, false)}
+        onCardEdit={(t) => openTask(t, true)}
+      />
 
       <AddTask onAdd={addTask} />
+
+      {/* Details / Edit modal */}
+      {activeTask && (
+        <TaskModal
+          task={activeTask}
+          isEditing={isEditing}
+          onClose={closeTask}
+          onSave={saveTask}
+        />
+      )}
     </div>
   );
 };
