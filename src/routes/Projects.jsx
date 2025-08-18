@@ -65,9 +65,13 @@ const Projects = () => {
       prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
     );
 
-    // TODO: Persist via Flowgear → Asana sections
+    const sectionMap = {
+      "To Do": "1210877207786176",
+      "In Progress": "1210877207786177",
+      Done: "1210877207786178",
+    };
     try {
-      await moveTaskToSection(/* taskId, sectionGidMappedFrom(newStatus) */);
+      await moveTaskToSection(taskId, sectionMap[newStatus]);
     } catch (err) {
       console.error("Move failed, reverting...", err);
       // revert if needed (simple way: reload from server)

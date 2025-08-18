@@ -1,10 +1,9 @@
 // src/api/asana.js
 const BASE_URL = "https://api-test-triaseyg.flowgear.net/asana";
 
-// ⚠️ Move this to .env.local -> REACT_APP_FLOWGEAR_KEY=yourKeyHere
 const AUTH_KEY = process.env.REACT_APP_FLOWGEAR_KEY;
 
-// GET tasks coming from Flowgear (already filtered to your project)
+// GET tasks coming from Flowgear (already filtered to the project)
 export async function getTasks() {
   const url = `${BASE_URL}/task?auth-key=${AUTH_KEY}&opt_fields=gid,name,notes,memberships.section.name,assignee.name,due_on`;
   const res = await fetch(url);
@@ -14,17 +13,46 @@ export async function getTasks() {
   return json.data || [];
 }
 
-/**
- * TODO: Persist edits via Flowgear (when you expose endpoints).
- * Below are stubs so the UI can call them optimistically now.
- */
-export async function updateTaskFields(/* taskId, payload */) {
-  // Example: POST to your Flowgear workflow that proxies Asana "Update a task"
-  return { ok: true };
+export async function moveTaskToSection(taskId, projectId, sectionName) {
+  const response = await fetch(
+    "https://api-test-triaseyg.flowgear.net/asana/task/move",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${AUTH_KEY}`,
+      },
+      body: JSON.stringify({
+        task_gid: taskId,
+        project_gid: projectId,
+        section_name: sectionName,
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to move task");
+  }
+  return response.json();
 }
 
-// Move to a different section inside the same project
-export async function moveTaskToSection(/* taskId, targetSectionGid */) {
-  // Example: POST /sections/{section_gid}/addTask with { task: taskId }
-  return { ok: true };
+// New helper function: update task fields
+export async function updateTaskFields(taskId, projectId, fields) {
+  const response = await fetch(
+    "https://api-test-triaseyg.flowgear.net/asana/task/update",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        task_gid: taskId,
+        project_gid: projectId,
+        fields,
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to update task");
+  }
+  return response.json();
 }
