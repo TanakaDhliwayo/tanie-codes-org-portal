@@ -5,38 +5,80 @@ import Filter from "../components/Filter";
 import AddTask from "../components/AddTask";
 import KanbanBoard from "../components/KanbanBoard";
 import TaskModal from "../components/TaskModal";
-import { getTasks, updateTaskFields, moveTaskToSection } from "../api/asana";
+import {
+  getTasks,
+  getProjects,
+  updateTaskFields,
+  moveTaskToSection,
+} from "../api/asana";
 import { mapAsanaTask } from "../utils/taskMapper";
+import { createTask } from "../api/asana";
 
 const STATUSES = ["To Do", "In Progress", "Done"];
 
 const Projects = () => {
   const [tasks, setTasks] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [selectedProject, setSelectedProject] = useState(null);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [filterAssignee, setFilterAssignee] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // modal state
-  const [activeTask, setActiveTask] = useState(null); // object or null
+  const [activeTask, setActiveTask] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
 
+  // 🔹 Load projects first, then select default and fetch tasks
   useEffect(() => {
     (async () => {
       try {
-        const raw = await getTasks();
-        const mapped = raw.map(mapAsanaTask);
-        setTasks(mapped);
+        const allProjects = await getProjects();
+        setProjects(allProjects);
+
+        if (allProjects.length > 0) {
+          const defaultProject = allProjects[0];
+          setSelectedProject(defaultProject.gid);
+
+          const raw = await getTasks(defaultProject.gid);
+          setTasks(raw.map(mapAsanaTask));
+        }
       } catch (e) {
-        console.error("Failed to load tasks:", e);
+        console.error("Failed to load projects or tasks:", e);
       } finally {
         setLoading(false);
       }
     })();
   }, []);
 
-  const addTask = (newTask) => setTasks((prev) => [...prev, newTask]);
+  // 🔹 Fetch tasks when project changes
+  useEffect(() => {
+    if (!selectedProject) return;
+    (async () => {
+      try {
+        setLoading(true);
+        const raw = await getTasks(selectedProject);
+        setTasks(raw.map(mapAsanaTask));
+      } catch (e) {
+        console.error("Failed to load tasks:", e);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [selectedProject]);
 
-  // Filter + search (memoized for perf/readability)
+  const addTask = () => {
+    const draftTask = {
+      id: null, // temporary ID
+      name: "",
+      description: "",
+      status: "To Do",
+      assignee: null,
+      due_on: null,
+    };
+    setActiveTask(draftTask);
+    setIsEditing(true);
+  };
+
   const filteredTasks = useMemo(() => {
     const q = searchQuery.toLowerCase();
     return tasks.filter((t) => {
@@ -50,9 +92,9 @@ const Projects = () => {
     });
   }, [tasks, searchQuery, filterAssignee]);
 
-  // ===== Drag & Drop =====
+  // Drag & Drop
   const onDragStart = (e, taskId) => {
-    e.dataTransfer.setData("text/taskId", String(taskId));
+    e.dataTransfer.setData("text/taskId", taskId);
   };
 
   const onDropToStatus = async (e, newStatus) => {
@@ -60,61 +102,96 @@ const Projects = () => {
     const taskId = e.dataTransfer.getData("text/taskId");
     if (!taskId) return;
 
-    // Optimistic UI update
     setTasks((prev) =>
       prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
     );
 
-    const sectionMap = {
-      "To Do": "1210877207786176",
-      "In Progress": "1210877207786177",
-      Done: "1210877207786178",
-    };
     try {
-      await moveTaskToSection(taskId, sectionMap[newStatus]);
+      await moveTaskToSection(taskId, selectedProject, newStatus);
     } catch (err) {
       console.error("Move failed, reverting...", err);
-      // revert if needed (simple way: reload from server)
       try {
-        const raw = await getTasks();
+        const raw = await getTasks(selectedProject);
         setTasks(raw.map(mapAsanaTask));
       } catch {}
     }
   };
 
-  // ===== Modal open/close =====
+  // Modal
   const openTask = (task, edit = false) => {
     setActiveTask(task);
     setIsEditing(edit);
   };
+
   const closeTask = () => {
     setActiveTask(null);
     setIsEditing(false);
   };
 
-  // ===== Save edits (optimistic) =====
   const saveTask = async (updated) => {
-    setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
     closeTask();
-
     try {
-      await updateTaskFields(/* updated.id, buildPatchFrom(updated) */);
+      let saved;
+      if (!updated.id) {
+        // NEW TASK → call Flowgear create workflow
+        saved = await createTask(selectedProject, {
+          name: updated.name,
+          notes: updated.description || "",
+        });
+      } else {
+        // EXISTING TASK → update workflow
+        saved = await updateTaskFields(updated.id, selectedProject, updated);
+      }
+
+      // Map back into frontend model
+      const mapped = mapAsanaTask(saved);
+
+      setTasks((prev) => {
+        if (!updated.id) {
+          // new task → append
+          return [...prev, mapped];
+        } else {
+          // existing task → replace
+          return prev.map((t) => (t.id === mapped.id ? mapped : t));
+        }
+      });
     } catch (err) {
-      console.error("Save failed, reverting...", err);
-      // revert by refetching
-      try {
-        const raw = await getTasks();
-        setTasks(raw.map(mapAsanaTask));
-      } catch {}
+      console.error("Save failed:", err);
     }
   };
 
-  if (loading) return <p className="m-4">Loading tasks...</p>;
+  if (loading) return <p className="m-4">Loading...</p>;
 
   return (
     <div className="container mt-4 position-relative">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2>Projects</h2>
+        <h2>
+          <select
+            value={selectedProject || ""}
+            onChange={(e) => setSelectedProject(e.target.value)}
+            className="form-select"
+            style={{ display: "inline-block", width: "auto" }}
+          >
+            {/* Show a placeholder while loading */}
+            {loading && projects.length === 0 && (
+              <option disabled>Loading projects...</option>
+            )}
+
+            {/* If no projects returned */}
+            {!loading && projects.length === 0 && (
+              <option disabled>No projects available</option>
+            )}
+
+            {/* Map projects to options */}
+            {!loading &&
+              projects.map((proj) => (
+                <option key={proj.gid} value={proj.gid}>
+                  {proj.name?.trim() || "Untitled Project"}
+                </option>
+              ))}
+          </select>
+        </h2>
+
         <div className="d-flex gap-2">
           <SearchBar
             searchQuery={searchQuery}
@@ -136,10 +213,12 @@ const Projects = () => {
         onCardClick={(t) => openTask(t, false)}
         onCardEdit={(t) => openTask(t, true)}
       />
+      <AddTask
+        onAdd={addTask}
+        projectId={selectedProject}
+        onOpenTask={openTask}
+      />
 
-      <AddTask onAdd={addTask} />
-
-      {/* Details / Edit modal */}
       {activeTask && (
         <TaskModal
           task={activeTask}

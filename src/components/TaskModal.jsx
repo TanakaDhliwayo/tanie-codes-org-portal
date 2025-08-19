@@ -80,14 +80,13 @@ const TaskModal = ({ task, isEditing = false, onClose, onSave }) => {
                 <div className="mb-2">
                   <label className="form-label">Status</label>
                   <select
-                    name="status"
-                    value={form.status}
-                    onChange={handleChange}
-                    className="form-select"
+                    value={task.status}
+                    onChange={(e) => onChange("status", e.target.value)}
+                    disabled //  always disabled, section is auto-managed
                   >
-                    {STATUSES.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
+                    {statuses.map((status) => (
+                      <option key={status} value={status}>
+                        {status}
                       </option>
                     ))}
                   </select>

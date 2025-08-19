@@ -9,6 +9,7 @@ function normalizeStatus(sectionName) {
 
 export function mapAsanaTask(task) {
   const section = task.memberships?.[0]?.section || {};
+  const project = task.memberships?.[0]?.project || {};
   const sectionName = section?.name || null;
   const sectionGid = section?.gid || null;
 
@@ -16,11 +17,12 @@ export function mapAsanaTask(task) {
     id: task.gid,
     name: task.name || "Untitled Task",
     description: task.notes || "No description",
-    status: normalizeStatus(sectionName),
+    status: normalizeStatus(section.name),
     assignee: task.assignee?.name || "Unassigned",
     dueDate: task.due_on || "N/A",
-    section_name: sectionName,
-    section_gid: sectionGid,
+    section_name: section.name || null,
+    section_gid: section.gid || null,
+    project_gid: project.gid || null,
     _raw: task,
   };
 }

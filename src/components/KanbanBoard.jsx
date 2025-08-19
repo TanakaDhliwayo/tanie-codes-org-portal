@@ -1,10 +1,9 @@
-// src/components/KanbanBoard.jsx
-import React from "react";
+//components/KanbanBoard.jsx
 import TaskCard from "./TaskCard";
 import "../styles/kanban.css";
 
 const KanbanBoard = ({
-  statuses = ["To Do", "In Progress", "Done"],
+  statuses,
   tasks,
   onDragStart,
   onDropToStatus,
@@ -23,7 +22,6 @@ const KanbanBoard = ({
           onDrop={(e) => onDropToStatus(e, status)}
         >
           <h5 className="kanban-title">{status}</h5>
-
           {tasks
             .filter((t) => t.status === status)
             .map((t) => (
