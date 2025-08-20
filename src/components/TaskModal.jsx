@@ -80,11 +80,14 @@ const TaskModal = ({ task, isEditing = false, onClose, onSave }) => {
                 <div className="mb-2">
                   <label className="form-label">Status</label>
                   <select
-                    value={task.status}
-                    onChange={(e) => onChange("status", e.target.value)}
-                    disabled //  always disabled, section is auto-managed
+                    value={form.status}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, status: e.target.value }))
+                    }
+                    disabled // Status is auto-managed
+                    className="form-select"
                   >
-                    {statuses.map((status) => (
+                    {STATUSES.map((status) => (
                       <option key={status} value={status}>
                         {status}
                       </option>

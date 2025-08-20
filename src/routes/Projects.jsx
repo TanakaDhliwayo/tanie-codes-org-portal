@@ -10,9 +10,9 @@ import {
   getProjects,
   updateTaskFields,
   moveTaskToSection,
+  createTask,
 } from "../api/asana";
 import { mapAsanaTask } from "../utils/taskMapper";
-import { createTask } from "../api/asana";
 
 const STATUSES = ["To Do", "In Progress", "Done"];
 
@@ -66,9 +66,10 @@ const Projects = () => {
     })();
   }, [selectedProject]);
 
+  // 🔹 Add new task → open modal immediately in edit mode
   const addTask = () => {
     const draftTask = {
-      id: null, // temporary ID
+      id: null,
       name: "",
       description: "",
       status: "To Do",
@@ -124,16 +125,21 @@ const Projects = () => {
   };
 
   const closeTask = () => {
+    // ❌ If task was new and unsaved, don’t leave an empty draft
+    if (activeTask && activeTask.id === null) {
+      setActiveTask(null);
+      setIsEditing(false);
+      return;
+    }
     setActiveTask(null);
     setIsEditing(false);
   };
 
   const saveTask = async (updated) => {
-    closeTask();
     try {
       let saved;
       if (!updated.id) {
-        // NEW TASK → call Flowgear create workflow
+        // NEW TASK → Flowgear create workflow
         saved = await createTask(selectedProject, {
           name: updated.name,
           notes: updated.description || "",
@@ -143,7 +149,6 @@ const Projects = () => {
         saved = await updateTaskFields(updated.id, selectedProject, updated);
       }
 
-      // Map back into frontend model
       const mapped = mapAsanaTask(saved);
 
       setTasks((prev) => {
@@ -155,6 +160,9 @@ const Projects = () => {
           return prev.map((t) => (t.id === mapped.id ? mapped : t));
         }
       });
+
+      // ✅ Close modal after save succeeds
+      closeTask();
     } catch (err) {
       console.error("Save failed:", err);
     }
@@ -172,17 +180,12 @@ const Projects = () => {
             className="form-select"
             style={{ display: "inline-block", width: "auto" }}
           >
-            {/* Show a placeholder while loading */}
             {loading && projects.length === 0 && (
               <option disabled>Loading projects...</option>
             )}
-
-            {/* If no projects returned */}
             {!loading && projects.length === 0 && (
               <option disabled>No projects available</option>
             )}
-
-            {/* Map projects to options */}
             {!loading &&
               projects.map((proj) => (
                 <option key={proj.gid} value={proj.gid}>
@@ -213,11 +216,7 @@ const Projects = () => {
         onCardClick={(t) => openTask(t, false)}
         onCardEdit={(t) => openTask(t, true)}
       />
-      <AddTask
-        onAdd={addTask}
-        projectId={selectedProject}
-        onOpenTask={openTask}
-      />
+      <AddTask onAdd={addTask} projectId={selectedProject} />
 
       {activeTask && (
         <TaskModal

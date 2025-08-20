@@ -73,8 +73,11 @@ export async function createTask(projectId, fields) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      project_gid: projectId,
-      ...fields, // name, notes, etc.
+      data: {
+        projects: [projectId], //  Asana expects array of project IDs
+        name: fields.name,
+        notes: fields.notes || "",
+      },
     }),
   });
 

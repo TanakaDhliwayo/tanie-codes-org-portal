@@ -4,26 +4,19 @@ import "../styles/AddTask.css";
 import { createTask } from "../api/asana";
 import { mapAsanaTask } from "../utils/taskMapper";
 
-const AddTask = ({ onAdd, projectId, onOpenTask }) => {
-  const handleAdd = async () => {
-    try {
-      const newTask = await createTask(projectId, {
-        name: "New Task",
-        notes: "Created from frontend",
-      });
+const AddTask = ({ onAdd }) => {
+  const handleAdd = () => {
+    const draftTask = {
+      id: null,
+      name: "",
+      description: "",
+      status: "To Do",
+      assignee: "",
+      dueDate: "",
+    };
 
-      // Force section = "To Do"
-      const mapped = mapAsanaTask({
-        ...newTask,
-        memberships: [{ section: { name: "To Do" } }],
-      });
-
-      onAdd(mapped);
-      onOpenTask(mapped, true); // immediately open in edit mode
-    } catch (err) {
-      console.error("Failed to add task:", err);
-      alert("❌ Could not create task");
-    }
+    // just call onAdd → Projects.jsx will handle opening the modal
+    onAdd(draftTask);
   };
 
   return (
