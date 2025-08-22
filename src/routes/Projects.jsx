@@ -13,6 +13,8 @@ import {
   createTask,
 } from "../api/asana";
 import { mapAsanaTask } from "../utils/taskMapper";
+import Loader from "../components/loader";
+import "../styles/loader.css";
 
 const STATUSES = ["To Do", "In Progress", "Done"];
 
@@ -168,7 +170,12 @@ const Projects = () => {
     }
   };
 
-  if (loading) return <p className="m-4">Loading...</p>;
+  if (loading)
+    return (
+      <div style={{ width: "100%", textAlign: "center" }}>
+        <Loader title="getting tasks" />
+      </div>
+    );
 
   return (
     <div className="container mt-4 position-relative">

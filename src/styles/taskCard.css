@@ -3,7 +3,7 @@
 /* base card look */
 .task-card {
   border: none;
-  border-left: 4px solid #e9ecef;
+  border-left: 8px solid #e9ecef;
   border-radius: 12px;
   padding: 12px;
   background: #fff;
@@ -45,15 +45,17 @@
   margin-top: 8px;
 }
 
-.status-todo {
+.task-card.status-todo {
   border-left-color: #00f5ff;
-} /* blue */
-.status-inprogress {
+}
+
+.task-card.status-inprogress {
   border-left-color: #fd7e14;
-} /* orange */
-.status-done {
+}
+
+.task-card.status-done {
   border-left-color: #198754;
-} /* green */
+}
 
 .task-card button {
   background: #f5f7fb;
