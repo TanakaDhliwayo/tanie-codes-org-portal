@@ -1,5 +1,6 @@
 // src/components/TaskCard.jsx
 import React from "react";
+import "../styles/taskCard.css";
 
 const TaskCard = ({ task, onDragStart, onClick, onEdit }) => {
   const handleClick = (e) => {
@@ -7,29 +8,25 @@ const TaskCard = ({ task, onDragStart, onClick, onEdit }) => {
     onClick();
   };
 
+  // turn "In Progress" -> "inprogress" for the status class
+  const statusKey = (task.status || "To Do").replace(/\s+/g, "").toLowerCase();
+
   return (
     <div
-      className="card mb-3 shadow-sm"
+      className={`card task-card mb-3 shadow-sm status-${statusKey}`}
       draggable
       onDragStart={(e) => onDragStart(e, task.id)}
       onClick={handleClick}
-      style={{
-        borderRadius: "10px",
-        padding: "10px",
-        cursor: "pointer",
-        backgroundColor: "#fdfdfd",
-      }}
+      title={task.name}
     >
-      <div className="fw-semibold text-truncate" title={task.name}>
-        {task.name}
+      <div className="task-title">{task.name}</div>
+
+      <div className="task-meta">
+        <span className="chip">👤 {task.assignee}</span>
+        <span className="chip">📅 {task.dueDate}</span>
       </div>
 
-      <div className="d-flex justify-content-between align-items-center mt-2">
-        <small className="text-muted">👤 {task.assignee}</small>
-        <small className="text-muted">📅 {task.dueDate}</small>
-      </div>
-
-      <div className="mt-2">
+      <div className="task-actions">
         <button
           className="btn btn-sm btn-primary"
           onClick={(e) => {

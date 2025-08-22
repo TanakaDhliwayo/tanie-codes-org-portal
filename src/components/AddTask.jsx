@@ -15,7 +15,6 @@ const AddTask = ({ onAdd }) => {
       dueDate: "",
     };
 
-    // just call onAdd → Projects.jsx will handle opening the modal
     onAdd(draftTask);
   };
 

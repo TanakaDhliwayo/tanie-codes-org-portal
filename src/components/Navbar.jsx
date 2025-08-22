@@ -1,8 +1,8 @@
 // src/components/Navbar.jsx
 import React from "react";
 import { NavLink } from "react-router-dom";
-import "./Navbar.css"; // we'll add some custom styles later
-import logo from "../assets/logo.png"; // adjust path based on your structure
+import "../styles/Navbar.css";
+import logo from "../assets/logo.png";
 
 const Navbar = () => {
   return (

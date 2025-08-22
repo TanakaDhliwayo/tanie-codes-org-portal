@@ -1,22 +1,31 @@
 /* src/styles/kanban.css */
 
 .kanban-board {
-  padding: 10px 20px;
-  height: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px;
+  background: #f8f9fb; /* light background for contrast */
+  border-radius: 12px;
+  min-height: 70vh;
 }
 
 .kanban-column {
   flex: 1;
-  padding: 5px 50px;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .kanban-title {
   text-align: center;
-  padding: 10px 10px;
-  margin-bottom: 15px;
-  border-bottom: none;
-}
-
-.with-border {
-  border-right: 1px solid #ccc;
+  font-weight: 600;
+  padding: 10px 0;
+  margin-bottom: 10px;
+  border-bottom: 2px solid #eee;
+  color: #333;
 }
