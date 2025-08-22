@@ -10,8 +10,6 @@ function normalizeStatus(sectionName) {
 export function mapAsanaTask(task) {
   const section = task.memberships?.[0]?.section || {};
   const project = task.memberships?.[0]?.project || {};
-  const sectionName = section?.name || null;
-  const sectionGid = section?.gid || null;
 
   return {
     id: task.gid,

@@ -1,17 +1,16 @@
-/* Navbar.css – Soft feminine tech style */
 .custom-navbar {
-  background-color: #00f5ff; /* light blue tone */
+  background-color: #f8f9fb;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .nav-link {
-  color: #333;
+  color: #00f5ff;
   margin-right: 1rem;
   transition: color 0.2s ease;
 }
 
 .nav-link:hover,
 .nav-link.active {
-  color: #0077b6; /* darker blue */
+  color: #8f9596;
   font-weight: 500;
 }

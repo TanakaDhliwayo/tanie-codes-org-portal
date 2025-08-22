@@ -5,7 +5,7 @@
   justify-content: space-between;
   gap: 20px;
   padding: 20px;
-  background: #f8f9fb; /* light background for contrast */
+  background: #f8f9fb;
   border-radius: 12px;
   min-height: 70vh;
 }

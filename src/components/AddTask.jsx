@@ -1,8 +1,6 @@
 // src/components/AddTask.jsx
 import React from "react";
 import "../styles/AddTask.css";
-import { createTask } from "../api/asana";
-import { mapAsanaTask } from "../utils/taskMapper";
 
 const AddTask = ({ onAdd }) => {
   const handleAdd = () => {
