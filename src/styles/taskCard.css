@@ -50,7 +50,7 @@
 }
 
 .task-card.status-inprogress {
-  border-left-color: #fd7e14;
+  border-left-color: #ffff00;
 }
 
 .task-card.status-done {

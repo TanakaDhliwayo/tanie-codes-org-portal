@@ -1,4 +1,3 @@
-// src/routes/Projects.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import SearchBar from "../components/SearchBar";
 import Filter from "../components/Filter";
@@ -163,7 +162,6 @@ const Projects = () => {
         }
       });
 
-      // ✅ Close modal after save succeeds
       closeTask();
     } catch (err) {
       console.error("Save failed:", err);
@@ -178,52 +176,60 @@ const Projects = () => {
     );
 
   return (
-    <div className="container mt-4 position-relative">
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2>
-          <select
-            value={selectedProject || ""}
-            onChange={(e) => setSelectedProject(e.target.value)}
-            className="form-select"
-            style={{ display: "inline-block", width: "auto" }}
-          >
-            {loading && projects.length === 0 && (
-              <option disabled>Loading projects...</option>
-            )}
-            {!loading && projects.length === 0 && (
-              <option disabled>No projects available</option>
-            )}
-            {!loading &&
-              projects.map((proj) => (
-                <option key={proj.gid} value={proj.gid}>
-                  {proj.name?.trim() || "Untitled Project"}
-                </option>
-              ))}
-          </select>
-        </h2>
+    <>
+      {/* 🔹 Top section stays white inside the container */}
+      <div className="container mt-4 position-relative">
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h2>
+            <select
+              value={selectedProject || ""}
+              onChange={(e) => setSelectedProject(e.target.value)}
+              className="form-select"
+              style={{ display: "inline-block", width: "auto" }}
+            >
+              {loading && projects.length === 0 && (
+                <option disabled>Loading projects...</option>
+              )}
+              {!loading && projects.length === 0 && (
+                <option disabled>No projects available</option>
+              )}
+              {!loading &&
+                projects.map((proj) => (
+                  <option key={proj.gid} value={proj.gid}>
+                    {proj.name?.trim() || "Untitled Project"}
+                  </option>
+                ))}
+            </select>
+          </h2>
 
-        <div className="d-flex gap-2">
-          <SearchBar
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-          />
-          <Filter
-            selectedAssignee={filterAssignee}
-            setSelectedAssignee={setFilterAssignee}
-            tasks={tasks}
-          />
+          <div className="d-flex gap-2">
+            <SearchBar
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+            />
+            <Filter
+              selectedAssignee={filterAssignee}
+              setSelectedAssignee={setFilterAssignee}
+              tasks={tasks}
+            />
+          </div>
         </div>
       </div>
 
-      <KanbanBoard
-        statuses={STATUSES}
-        tasks={filteredTasks}
-        onDragStart={onDragStart}
-        onDropToStatus={onDropToStatus}
-        onCardClick={(t) => openTask(t, false)}
-        onCardEdit={(t) => openTask(t, true)}
-      />
-      <AddTask onAdd={addTask} projectId={selectedProject} />
+      {/* 🔹 Full-width gray section below the white header */}
+      <div className="kanban-section">
+        <div className="container">
+          <KanbanBoard
+            statuses={STATUSES}
+            tasks={filteredTasks}
+            onDragStart={onDragStart}
+            onDropToStatus={onDropToStatus}
+            onCardClick={(t) => openTask(t, false)}
+            onCardEdit={(t) => openTask(t, true)}
+          />
+          <AddTask onAdd={addTask} projectId={selectedProject} />
+        </div>
+      </div>
 
       {activeTask && (
         <TaskModal
@@ -233,7 +239,7 @@ const Projects = () => {
           onSave={saveTask}
         />
       )}
-    </div>
+    </>
   );
 };
 
