@@ -1,10 +1,10 @@
-//components/KanbanBoard.jsx
 import TaskCard from "./TaskCard";
 import "../styles/kanban.css";
 
 const KanbanBoard = ({
   statuses,
   tasks,
+  users,
   onDragStart,
   onDropToStatus,
   onCardClick,
@@ -28,6 +28,7 @@ const KanbanBoard = ({
               <TaskCard
                 key={t.id}
                 task={t}
+                users={users} //  pass users
                 onDragStart={onDragStart}
                 onClick={() => onCardClick(t)}
                 onEdit={() => onCardEdit(t)}

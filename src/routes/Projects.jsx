@@ -14,6 +14,7 @@ import {
 import { mapAsanaTask } from "../utils/taskMapper";
 import Loader from "../components/loader";
 import "../styles/loader.css";
+import { getUsers } from "../api/asana";
 
 const STATUSES = ["To Do", "In Progress", "Done"];
 
@@ -29,7 +30,20 @@ const Projects = () => {
   const [activeTask, setActiveTask] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
 
-  // 🔹 Load projects first, then select default and fetch tasks
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const allUsers = await getUsers();
+        setUsers(allUsers);
+      } catch (err) {
+        console.error("Failed to load users", err);
+      }
+    })();
+  }, []);
+
+  //  Load projects first, then select default and fetch tasks
   useEffect(() => {
     (async () => {
       try {
@@ -51,7 +65,7 @@ const Projects = () => {
     })();
   }, []);
 
-  // 🔹 Fetch tasks when project changes
+  //  Fetch tasks when project changes
   useEffect(() => {
     if (!selectedProject) return;
     (async () => {
@@ -67,7 +81,7 @@ const Projects = () => {
     })();
   }, [selectedProject]);
 
-  // 🔹 Add new task → open modal immediately in edit mode
+  //  Add new task → open modal immediately in edit mode
   const addTask = () => {
     const draftTask = {
       id: null,
@@ -126,7 +140,7 @@ const Projects = () => {
   };
 
   const closeTask = () => {
-    // ❌ If task was new and unsaved, don’t leave an empty draft
+    //
     if (activeTask && activeTask.id === null) {
       setActiveTask(null);
       setIsEditing(false);
@@ -139,28 +153,33 @@ const Projects = () => {
   const saveTask = async (updated) => {
     try {
       let saved;
+
       if (!updated.id) {
-        // NEW TASK → Flowgear create workflow
+        // NEW TASK
         saved = await createTask(selectedProject, {
           name: updated.name,
           notes: updated.description || "",
+          assignee: updated.assignee || null,
+          dueDate: updated.dueDate || null,
         });
       } else {
-        // EXISTING TASK → update workflow
-        saved = await updateTaskFields(updated.id, selectedProject, updated);
+        // EXISTING TASK
+        saved = await updateTaskFields(updated.id, selectedProject, {
+          name: updated.name,
+          description: updated.description || "",
+          assignee: updated.assignee || null,
+          dueDate: updated.dueDate || null,
+        });
       }
 
+      // Map API response
       const mapped = mapAsanaTask(saved);
 
-      setTasks((prev) => {
-        if (!updated.id) {
-          // new task → append
-          return [...prev, mapped];
-        } else {
-          // existing task → replace
-          return prev.map((t) => (t.id === mapped.id ? mapped : t));
-        }
-      });
+      setTasks((prev) =>
+        updated.id
+          ? prev.map((t) => (t.id === mapped.id ? mapped : t))
+          : [...prev, mapped]
+      );
 
       closeTask();
     } catch (err) {
@@ -210,18 +229,19 @@ const Projects = () => {
             <Filter
               selectedAssignee={filterAssignee}
               setSelectedAssignee={setFilterAssignee}
-              tasks={tasks}
+              users={users}
             />
           </div>
         </div>
       </div>
 
-      {/* 🔹 Full-width gray section below the white header */}
+      {/*Full-width gray section below the white header */}
       <div className="kanban-section">
         <div className="container">
           <KanbanBoard
             statuses={STATUSES}
             tasks={filteredTasks}
+            users={users} // added
             onDragStart={onDragStart}
             onDropToStatus={onDropToStatus}
             onCardClick={(t) => openTask(t, false)}
@@ -237,6 +257,7 @@ const Projects = () => {
           isEditing={isEditing}
           onClose={closeTask}
           onSave={saveTask}
+          users={users}
         />
       )}
     </>

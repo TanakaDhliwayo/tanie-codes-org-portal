@@ -2,14 +2,17 @@
 import React from "react";
 import "../styles/taskCard.css";
 
-const TaskCard = ({ task, onDragStart, onClick, onEdit }) => {
+const TaskCard = ({ task, users = [], onDragStart, onClick, onEdit }) => {
   const handleClick = (e) => {
-    if (e.defaultPrevented) return; // prevent click during drag
+    if (e.defaultPrevented) return;
     onClick();
   };
 
-  // turn "In Progress" -> "inprogress" for the status class
   const statusKey = (task.status || "To Do").replace(/\s+/g, "").toLowerCase();
+
+  const assigneeName = task.assignee
+    ? users.find((u) => u.gid === task.assignee)?.name || "Unknown"
+    : "Unassigned";
 
   return (
     <div
@@ -22,7 +25,7 @@ const TaskCard = ({ task, onDragStart, onClick, onEdit }) => {
       <div className="task-title">{task.name}</div>
 
       <div className="task-meta">
-        <span className="chip">👤 {task.assignee}</span>
+        <span className="chip">👤 {assigneeName}</span>
         <span className="chip">📅 {task.dueDate}</span>
       </div>
 

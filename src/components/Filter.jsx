@@ -1,9 +1,6 @@
-// src/components/Filter.jsx
 import React from "react";
 
-const Filter = ({ selectedAssignee, setSelectedAssignee, tasks }) => {
-  const assignees = [...new Set(tasks.map((task) => task.assignee))];
-
+const Filter = ({ selectedAssignee, setSelectedAssignee, users = [] }) => {
   return (
     <select
       className="form-select form-select-sm"
@@ -12,9 +9,9 @@ const Filter = ({ selectedAssignee, setSelectedAssignee, tasks }) => {
       onChange={(e) => setSelectedAssignee(e.target.value)}
     >
       <option value="">All Assignees</option>
-      {assignees.map((assignee, index) => (
-        <option key={index} value={assignee}>
-          {assignee}
+      {users.map((user) => (
+        <option key={user.gid} value={user.gid}>
+          {user.name}
         </option>
       ))}
     </select>

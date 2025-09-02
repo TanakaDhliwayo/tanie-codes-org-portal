@@ -1,19 +1,19 @@
 // src/api/asana.js
 const BASE_URL = "https://api-test-triaseyg.flowgear.net/asana";
-
 const AUTH_KEY = process.env.REACT_APP_FLOWGEAR_KEY;
 
 // Get tasks for a given project_gid
 export async function getTasks(project_gid) {
   if (!project_gid) throw new Error("No project_gid provided");
 
-  const url = `${BASE_URL}/task?auth-key=${AUTH_KEY}&project_gid=${project_gid}&opt_fields=gid,name,notes,memberships.section.name,assignee.name,due_on`;
+  const url = `${BASE_URL}/task?auth-key=${AUTH_KEY}&project_gid=${project_gid}&opt_fields=gid,name,notes,memberships.section.name,assignee.gid,assignee.name,due_on`;
   const res = await fetch(url);
   const json = await res.json();
   if (!res.ok)
     throw new Error(json?.Message || `Asana API error: ${res.status}`);
   return json.data || [];
 }
+
 export async function moveTaskToSection(taskId, projectId, sectionName) {
   const response = await fetch(`${BASE_URL}/task/move`, {
     method: "POST",
@@ -39,32 +39,56 @@ export async function moveTaskToSection(taskId, projectId, sectionName) {
 // Get all projects for dropdown
 export async function getProjects() {
   const url = `${BASE_URL}/projects?auth-key=${AUTH_KEY}`;
-  const res = await fetch(url);
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
   const json = await res.json();
   if (!res.ok)
     throw new Error(json?.Message || `Asana API error: ${res.status}`);
   return json.data || [];
 }
 
-// Nhelper function: update task fields
+// Helper: update task fields
 export async function updateTaskFields(taskId, projectId, fields) {
-  const response = await fetch(
-    "https://api-test-triaseyg.flowgear.net/asana/task/update",
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+  const response = await fetch(`${BASE_URL}/task/update`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      data: {
         task_gid: taskId,
         project_gid: projectId,
-        fields,
-      }),
-    }
-  );
+        name: fields.name,
+        notes: fields.description || "",
+        assignee: fields.assignee || null,
+        due_on: fields.dueDate || null,
+      },
+    }),
+  });
 
+  const json = await response.json();
   if (!response.ok) {
-    throw new Error("Failed to update task");
+    throw new Error(json?.Message || "Failed to update task");
   }
-  return response.json();
+  return json.data;
+}
+
+// Get all users in the workspace
+export async function getUsers() {
+  const url = `${BASE_URL}/users?auth-key=${AUTH_KEY}`;
+
+  const res = await fetch(url, {
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw new Error(json?.Message || `Asana API error: ${res.status}`);
+  }
+
+  const json = await res.json();
+  return json.data || [];
 }
 
 // Create a new task in a project via Flowgear
@@ -74,9 +98,11 @@ export async function createTask(projectId, fields) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       data: {
-        projects: [projectId], //  Asana expects array of project IDs
+        projects: [projectId], // Asana expects array of project IDs
         name: fields.name,
         notes: fields.notes || "",
+        assignee: fields.assignee || null, // include assignee
+        due_on: fields.dueDate || null, // include due date
       },
     }),
   });

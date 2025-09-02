@@ -1,4 +1,5 @@
 // src/utils/taskMapper.js
+
 function normalizeStatus(sectionName) {
   if (!sectionName) return "To Do";
   const name = sectionName.toLowerCase();
@@ -16,8 +17,9 @@ export function mapAsanaTask(task) {
     name: task.name || "Untitled Task",
     description: task.notes || "No description",
     status: normalizeStatus(section.name),
-    assignee: task.assignee?.name || "Unassigned",
-    dueDate: task.due_on || "N/A",
+    assignee: task.assignee?.gid || null,
+    dueDate: task.due_on || null, //
+
     section_name: section.name || null,
     section_gid: section.gid || null,
     project_gid: project.gid || null,
