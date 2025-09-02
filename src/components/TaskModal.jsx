@@ -14,7 +14,7 @@ const TaskModal = ({
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    setForm(task);
+    setForm((prev) => ({ ...prev, ...task }));
     setEditing(isEditing);
   }, [task, isEditing]);
 
@@ -24,12 +24,21 @@ const TaskModal = ({
   };
 
   const handleSave = async () => {
-    if (saving) return; // prevent double clicks
+    if (saving) return;
     setSaving(true);
 
     try {
-      await onSave(form);
-      onClose(); // close modal right after save request
+      // Convert modal form fields to the structure saveTask expects
+      const taskPayload = {
+        id: form.id || null,
+        name: form.name,
+        description: form.description || "",
+        assignee: form.assignee || null,
+        dueDate: form.dueDate || null,
+      };
+
+      await onSave(taskPayload);
+      onClose();
     } catch (err) {
       console.error("Save failed", err);
       alert("Failed to save task. Please try again.");

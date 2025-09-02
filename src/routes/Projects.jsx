@@ -149,41 +149,58 @@ const Projects = () => {
     setActiveTask(null);
     setIsEditing(false);
   };
-
   const saveTask = async (updated) => {
     try {
-      let saved;
-
       if (!updated.id) {
-        // NEW TASK
-        saved = await createTask(selectedProject, {
+        // ✅ Optimistically add task
+        const tempId = `temp-${Date.now()}`;
+        const tempTask = {
+          id: tempId,
+          name: updated.name,
+          description: updated.description || "",
+          status: "To Do",
+          assignee: updated.assignee || null,
+          dueDate: updated.dueDate || null,
+        };
+
+        setTasks((prev) => [...prev, tempTask]); // show instantly
+
+        // Call Asana API
+        const saved = await createTask(selectedProject, {
           name: updated.name,
           notes: updated.description || "",
           assignee: updated.assignee || null,
-          dueDate: updated.dueDate || null,
+          due_on: updated.dueDate || null,
         });
+
+        const mapped = mapAsanaTask(saved);
+
+        // ✅ Replace temp with Asana task
+        setTasks((prev) => prev.map((t) => (t.id === tempId ? mapped : t)));
       } else {
-        // EXISTING TASK
-        saved = await updateTaskFields(updated.id, selectedProject, {
+        // ✅ Optimistically update existing
+        setTasks((prev) =>
+          prev.map((t) => (t.id === updated.id ? { ...t, ...updated } : t))
+        );
+
+        // Call Asana API
+        const saved = await updateTaskFields(updated.id, {
           name: updated.name,
-          description: updated.description || "",
+          notes: updated.description || "",
           assignee: updated.assignee || null,
-          dueDate: updated.dueDate || null,
+          due_on: updated.dueDate || null,
         });
+
+        const mapped = mapAsanaTask(saved);
+
+        // ✅ Sync final version
+        setTasks((prev) => prev.map((t) => (t.id === mapped.id ? mapped : t)));
       }
-
-      // Map API response
-      const mapped = mapAsanaTask(saved);
-
-      setTasks((prev) =>
-        updated.id
-          ? prev.map((t) => (t.id === mapped.id ? mapped : t))
-          : [...prev, mapped]
-      );
 
       closeTask();
     } catch (err) {
       console.error("Save failed:", err);
+      alert("Failed to save task. Please try again.");
     }
   };
 
@@ -239,9 +256,10 @@ const Projects = () => {
       <div className="kanban-section">
         <div className="container">
           <KanbanBoard
+            key={tasks.length}
             statuses={STATUSES}
             tasks={filteredTasks}
-            users={users} // added
+            users={users}
             onDragStart={onDragStart}
             onDropToStatus={onDropToStatus}
             onCardClick={(t) => openTask(t, false)}
