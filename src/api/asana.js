@@ -62,7 +62,7 @@ export async function updateTaskFields(taskId, fields) {
         name: fields.name,
         notes: fields.notes || "",
         assignee: fields.assignee || null,
-        due_on: fields.due_on || null,
+        due_on: fields.dueDate || null,
       },
     }),
   });

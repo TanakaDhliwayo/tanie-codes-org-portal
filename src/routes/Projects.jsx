@@ -151,8 +151,13 @@ const Projects = () => {
   };
   const saveTask = async (updated) => {
     try {
+      const due_on =
+        updated.dueDate && updated.dueDate.trim() !== ""
+          ? updated.dueDate
+          : null;
+
       if (!updated.id) {
-        // ✅ Optimistically add task
+        // ✅ Optimistically add new task
         const tempId = `temp-${Date.now()}`;
         const tempTask = {
           id: tempId,
@@ -162,7 +167,6 @@ const Projects = () => {
           assignee: updated.assignee || null,
           dueDate: updated.dueDate || null,
         };
-
         setTasks((prev) => [...prev, tempTask]); // show instantly
 
         // Call Asana API
@@ -170,15 +174,15 @@ const Projects = () => {
           name: updated.name,
           notes: updated.description || "",
           assignee: updated.assignee || null,
-          due_on: updated.dueDate || null,
+          due_on,
         });
 
         const mapped = mapAsanaTask(saved);
 
-        // ✅ Replace temp with Asana task
+        // Replace temp task with Asana task
         setTasks((prev) => prev.map((t) => (t.id === tempId ? mapped : t)));
       } else {
-        // ✅ Optimistically update existing
+        // ✅ Optimistically update existing task
         setTasks((prev) =>
           prev.map((t) => (t.id === updated.id ? { ...t, ...updated } : t))
         );
@@ -188,12 +192,12 @@ const Projects = () => {
           name: updated.name,
           notes: updated.description || "",
           assignee: updated.assignee || null,
-          due_on: updated.dueDate || null,
+          due_on,
         });
 
         const mapped = mapAsanaTask(saved);
 
-        // ✅ Sync final version
+        // Sync final version
         setTasks((prev) => prev.map((t) => (t.id === mapped.id ? mapped : t)));
       }
 
