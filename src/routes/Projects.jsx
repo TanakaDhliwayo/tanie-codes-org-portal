@@ -43,7 +43,6 @@ const Projects = () => {
     })();
   }, []);
 
-  //  Load projects first, then select default and fetch tasks
   useEffect(() => {
     (async () => {
       try {
@@ -173,7 +172,7 @@ const Projects = () => {
           name: updated.name,
           notes: updated.description || "",
           assignee: updated.assignee || null,
-          due_on,
+          dueDate: due_on,
         });
 
         const mapped = mapAsanaTask(saved);
