@@ -120,7 +120,7 @@ const TaskModal = ({
                   <input
                     type="date"
                     name="dueDate"
-                    value={form.dueDate === "N/A" ? "" : form.dueDate}
+                    value={form.dueDate || ""}
                     onChange={handleChange}
                     className="form-control"
                   />

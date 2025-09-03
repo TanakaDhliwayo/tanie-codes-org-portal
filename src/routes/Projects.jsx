@@ -89,7 +89,7 @@ const Projects = () => {
       description: "",
       status: "To Do",
       assignee: null,
-      due_on: null,
+      due_on: "",
     };
     setActiveTask(draftTask);
     setIsEditing(true);
@@ -149,6 +149,7 @@ const Projects = () => {
     setActiveTask(null);
     setIsEditing(false);
   };
+
   const saveTask = async (updated) => {
     try {
       const due_on =
@@ -157,7 +158,6 @@ const Projects = () => {
           : null;
 
       if (!updated.id) {
-        // ✅ Optimistically add new task
         const tempId = `temp-${Date.now()}`;
         const tempTask = {
           id: tempId,
@@ -165,11 +165,10 @@ const Projects = () => {
           description: updated.description || "",
           status: "To Do",
           assignee: updated.assignee || null,
-          dueDate: updated.dueDate || null,
+          dueDate: due_on,
         };
-        setTasks((prev) => [...prev, tempTask]); // show instantly
+        setTasks((prev) => [...prev, tempTask]);
 
-        // Call Asana API
         const saved = await createTask(selectedProject, {
           name: updated.name,
           notes: updated.description || "",
@@ -179,20 +178,16 @@ const Projects = () => {
 
         const mapped = mapAsanaTask(saved);
 
-        // Replace temp task with Asana task
         setTasks((prev) => prev.map((t) => (t.id === tempId ? mapped : t)));
       } else {
-        // ✅ Optimistically update existing task
         setTasks((prev) =>
           prev.map((t) => (t.id === updated.id ? { ...t, ...updated } : t))
         );
-
-        // Call Asana API
         const saved = await updateTaskFields(updated.id, {
           name: updated.name,
           notes: updated.description || "",
           assignee: updated.assignee || null,
-          due_on,
+          dueDate: due_on,
         });
 
         const mapped = mapAsanaTask(saved);
@@ -217,7 +212,6 @@ const Projects = () => {
 
   return (
     <>
-      {/* 🔹 Top section stays white inside the container */}
       <div className="container mt-4 position-relative">
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h2>
@@ -256,7 +250,6 @@ const Projects = () => {
         </div>
       </div>
 
-      {/*Full-width gray section below the white header */}
       <div className="kanban-section">
         <div className="container">
           <KanbanBoard
