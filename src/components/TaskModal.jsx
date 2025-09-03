@@ -60,7 +60,7 @@ const TaskModal = ({
       style={{ background: "rgba(0,0,0,0.5)" }}
     >
       <div className="modal-dialog">
-        <div className="modal-content">
+        <div className="modal-content position-relative">
           <div className="modal-header">
             <h5 className="modal-title">
               {editing ? "Edit Task" : "Task Details"}
@@ -69,6 +69,7 @@ const TaskModal = ({
               type="button"
               className="btn-close"
               onClick={onClose}
+              disabled={saving}
             ></button>
           </div>
 
@@ -179,14 +180,15 @@ const TaskModal = ({
                 <button
                   className="btn btn-success"
                   onClick={handleSave}
-                  disabled={saving || !isValid} // disable if invalid
+                  disabled={saving || !isValid}
                 >
-                  {saving ? "Saving..." : "Save"}
+                  Save
                 </button>
 
                 <button
                   className="btn btn-secondary"
                   onClick={() => setEditing(false)}
+                  disabled={saving}
                 >
                   Cancel
                 </button>
@@ -195,14 +197,39 @@ const TaskModal = ({
               <button
                 className="btn btn-primary"
                 onClick={() => setEditing(true)}
+                disabled={saving}
               >
                 Edit
               </button>
             )}
-            <button className="btn btn-outline-secondary" onClick={onClose}>
+            <button
+              className="btn btn-outline-secondary"
+              onClick={onClose}
+              disabled={saving}
+            >
               Close
             </button>
           </div>
+
+          {/* Full overlay loader */}
+          {saving && (
+            <div
+              className="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+              style={{
+                backgroundColor: "rgba(255, 255, 255, 0.8)",
+                zIndex: 10,
+                borderRadius: "0.3rem",
+              }}
+            >
+              <div
+                className="spinner-border "
+                style={{ color: "#0beff7" }}
+                role="status"
+              >
+                <span className="visually-hidden">Saving...</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
