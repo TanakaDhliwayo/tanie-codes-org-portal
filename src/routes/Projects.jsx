@@ -150,6 +150,11 @@ const Projects = () => {
   };
 
   const saveTask = async (updated) => {
+    if (!updated.name || updated.name.trim() === "") {
+      alert("Task name is required!");
+      return;
+    }
+
     try {
       const due_on =
         updated.dueDate && updated.dueDate.trim() !== ""
@@ -157,6 +162,7 @@ const Projects = () => {
           : null;
 
       if (!updated.id) {
+        // creating a new task
         const tempId = `temp-${Date.now()}`;
         const tempTask = {
           id: tempId,
@@ -176,12 +182,13 @@ const Projects = () => {
         });
 
         const mapped = mapAsanaTask(saved);
-
         setTasks((prev) => prev.map((t) => (t.id === tempId ? mapped : t)));
       } else {
+        // updating existing task
         setTasks((prev) =>
           prev.map((t) => (t.id === updated.id ? { ...t, ...updated } : t))
         );
+
         const saved = await updateTaskFields(updated.id, {
           name: updated.name,
           notes: updated.description || "",
@@ -190,8 +197,6 @@ const Projects = () => {
         });
 
         const mapped = mapAsanaTask(saved);
-
-        // Sync final version
         setTasks((prev) => prev.map((t) => (t.id === mapped.id ? mapped : t)));
       }
 
@@ -272,6 +277,7 @@ const Projects = () => {
           onClose={closeTask}
           onSave={saveTask}
           users={users}
+          disableSave={!activeTask?.name || activeTask.name.trim() === ""}
         />
       )}
     </>

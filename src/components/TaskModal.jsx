@@ -1,4 +1,3 @@
-//src\components\TaskModal.jsx
 import React, { useEffect, useState } from "react";
 
 const STATUSES = ["To Do", "In Progress", "Done"];
@@ -13,6 +12,7 @@ const TaskModal = ({
   const [form, setForm] = useState(task);
   const [editing, setEditing] = useState(isEditing);
   const [saving, setSaving] = useState(false);
+  const [touched, setTouched] = useState(false);
 
   useEffect(() => {
     setForm((prev) => ({ ...prev, ...task }));
@@ -22,10 +22,13 @@ const TaskModal = ({
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+    if (name === "name") setTouched(true);
   };
 
+  const isValid = form.name && form.name.trim() !== "";
+
   const handleSave = async () => {
-    if (saving) return;
+    if (saving || !isValid) return;
     setSaving(true);
 
     try {
@@ -81,6 +84,11 @@ const TaskModal = ({
                     onChange={handleChange}
                     className="form-control"
                   />
+                  {!isValid && touched && (
+                    <small className="text-danger">
+                      Task title is required
+                    </small>
+                  )}
                 </div>
 
                 {/* Description */}
@@ -95,7 +103,7 @@ const TaskModal = ({
                   />
                 </div>
 
-                {/* Assignee dropdown */}
+                {/* Assignee */}
                 <div className="mb-2">
                   <label className="form-label">Assignee</label>
                   <select
@@ -125,7 +133,7 @@ const TaskModal = ({
                   />
                 </div>
 
-                {/* Status (disabled, auto-managed) */}
+                {/* Status */}
                 <div className="mb-2">
                   <label className="form-label">Status</label>
                   <select
@@ -171,7 +179,7 @@ const TaskModal = ({
                 <button
                   className="btn btn-success"
                   onClick={handleSave}
-                  disabled={saving}
+                  disabled={saving || !isValid} // disable if invalid
                 >
                   {saving ? "Saving..." : "Save"}
                 </button>
