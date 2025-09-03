@@ -1,3 +1,4 @@
+//src\routes\Projects.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import SearchBar from "../components/SearchBar";
 import Filter from "../components/Filter";
@@ -107,7 +108,6 @@ const Projects = () => {
     });
   }, [tasks, searchQuery, filterAssignee]);
 
-  // Drag & Drop
   const onDragStart = (e, taskId) => {
     e.dataTransfer.setData("text/taskId", taskId);
   };

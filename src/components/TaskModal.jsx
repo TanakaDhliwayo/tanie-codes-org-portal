@@ -1,3 +1,4 @@
+//src\components\TaskModal.jsx
 import React, { useEffect, useState } from "react";
 
 const STATUSES = ["To Do", "In Progress", "Done"];
@@ -28,17 +29,15 @@ const TaskModal = ({
     setSaving(true);
 
     try {
-      // Normalize due date: empty string → null, otherwise keep YYYY-MM-DD
       const dueDate =
         form.dueDate && form.dueDate.trim() !== "" ? form.dueDate : null;
 
-      // Convert modal form fields to the structure saveTask expects
       const taskPayload = {
         id: form.id || null,
         name: form.name,
         description: form.description || "",
         assignee: form.assignee || null,
-        dueDate, // normalized
+        dueDate,
       };
 
       await onSave(taskPayload);

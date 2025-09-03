@@ -1,3 +1,4 @@
+//src\components\loader.jsx
 const Loader = ({ title }) => {
   return (
     <div

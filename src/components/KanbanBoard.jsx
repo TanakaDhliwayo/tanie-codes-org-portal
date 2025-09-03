@@ -1,5 +1,6 @@
-import TaskCard from "./TaskCard";
+//src\components\KanbanBoard.jsx
 import "../styles/kanban.css";
+import TaskCard from "./TaskCard";
 
 const KanbanBoard = ({
   statuses,
