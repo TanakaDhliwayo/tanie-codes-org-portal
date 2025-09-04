@@ -182,9 +182,9 @@ const Projects = () => {
       } else {
         saved = await updateTaskFields(updated.id, selectedProject, {
           name: updated.name,
-          notes: updated.description || "",
+          description: updated.description || "",
           assignee: updated.assignee || null,
-          due_on: updated.dueDate || null,
+          dueDate: updated.dueDate || "",
         });
 
         const mapped = mapAsanaTask(saved);
