@@ -85,11 +85,12 @@ const TaskModal = ({
                     onChange={handleChange}
                     className="form-control"
                   />
-                  {!isValid && touched && (
-                    <small className="text-danger">
-                      Task title is required
-                    </small>
-                  )}
+                  {!isValid &&
+                    touched && ( //
+                      <small className="text-danger">
+                        Task title is required
+                      </small>
+                    )}
                 </div>
 
                 {/* Description */}
@@ -180,7 +181,7 @@ const TaskModal = ({
                 <button
                   className="btn btn-success"
                   onClick={handleSave}
-                  disabled={saving || !isValid}
+                  disabled={saving || !isValid} //
                 >
                   Save
                 </button>

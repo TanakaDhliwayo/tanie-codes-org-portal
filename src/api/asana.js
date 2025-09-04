@@ -52,15 +52,16 @@ export async function getProjects() {
 }
 
 // Update an existing Asana task via Flowgear
-export async function updateTaskFields(taskId, fields) {
+export async function updateTaskFields(taskId, projectId, fields) {
   const response = await fetch(`${BASE_URL}/task/update?auth-key=${AUTH_KEY}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       data: {
         task_gid: taskId,
+        project_gid: projectId,
         name: fields.name,
-        notes: fields.notes || "",
+        notes: fields.description || "",
         assignee: fields.assignee || null,
         due_on: fields.dueDate?.trim() ? fields.dueDate : undefined,
       },
@@ -98,10 +99,10 @@ export async function createTask(projectId, fields) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       data: {
-        projects: [projectId], // Asana expects array of project IDs
+        projects: [projectId],
         name: fields.name,
-        notes: fields.notes || "",
-        assignee: fields.assignee || null, // include assignee
+        notes: fields.description || "",
+        assignee: fields.assignee || null,
         due_on: fields.dueDate?.trim() ? fields.dueDate : undefined,
       },
     }),

@@ -1,4 +1,3 @@
-//src\routes\Projects.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import SearchBar from "../components/SearchBar";
 import Filter from "../components/Filter";
@@ -11,11 +10,11 @@ import {
   updateTaskFields,
   moveTaskToSection,
   createTask,
+  getUsers,
 } from "../api/asana";
 import { mapAsanaTask } from "../utils/taskMapper";
 import Loader from "../components/loader";
 import "../styles/loader.css";
-import { getUsers } from "../api/asana";
 
 const STATUSES = ["To Do", "In Progress", "Done"];
 
@@ -33,6 +32,7 @@ const Projects = () => {
 
   const [users, setUsers] = useState([]);
 
+  // ✅ always load users globally
   useEffect(() => {
     (async () => {
       try {
@@ -44,6 +44,7 @@ const Projects = () => {
     })();
   }, []);
 
+  // Load projects and default tasks
   useEffect(() => {
     (async () => {
       try {
@@ -65,7 +66,7 @@ const Projects = () => {
     })();
   }, []);
 
-  //  Fetch tasks when project changes
+  // Fetch tasks when project changes
   useEffect(() => {
     if (!selectedProject) return;
     (async () => {
@@ -81,15 +82,15 @@ const Projects = () => {
     })();
   }, [selectedProject]);
 
-  //  Add new task → open modal immediately in edit mode
+  // Add new task → open modal immediately in edit mode
   const addTask = () => {
     const draftTask = {
       id: null,
       name: "",
       description: "",
       status: "To Do",
-      assignee: null,
-      due_on: "",
+      assignee: "", // ✅ empty string
+      dueDate: "", // ✅ empty string
     };
     setActiveTask(draftTask);
     setIsEditing(true);
@@ -139,7 +140,6 @@ const Projects = () => {
   };
 
   const closeTask = () => {
-    //
     if (activeTask && activeTask.id === null) {
       setActiveTask(null);
       setIsEditing(false);
@@ -156,11 +156,7 @@ const Projects = () => {
     }
 
     try {
-      const due_on =
-        updated.dueDate && updated.dueDate.trim() !== ""
-          ? updated.dueDate
-          : null;
-
+      let saved;
       if (!updated.id) {
         // creating a new task
         const tempId = `temp-${Date.now()}`;
@@ -169,31 +165,26 @@ const Projects = () => {
           name: updated.name,
           description: updated.description || "",
           status: "To Do",
-          assignee: updated.assignee || null,
-          dueDate: due_on,
+          assignee: updated.assignee || "",
+          dueDate: updated.dueDate || "",
         };
         setTasks((prev) => [...prev, tempTask]);
 
-        const saved = await createTask(selectedProject, {
+        saved = await createTask(selectedProject, {
           name: updated.name,
           notes: updated.description || "",
-          assignee: updated.assignee || null,
-          dueDate: due_on,
+          assignee: updated.assignee || "",
+          dueDate: updated.dueDate || "",
         });
 
         const mapped = mapAsanaTask(saved);
         setTasks((prev) => prev.map((t) => (t.id === tempId ? mapped : t)));
       } else {
-        // updating existing task
-        setTasks((prev) =>
-          prev.map((t) => (t.id === updated.id ? { ...t, ...updated } : t))
-        );
-
-        const saved = await updateTaskFields(updated.id, {
+        saved = await updateTaskFields(updated.id, selectedProject, {
           name: updated.name,
           notes: updated.description || "",
           assignee: updated.assignee || null,
-          dueDate: due_on,
+          due_on: updated.dueDate || null,
         });
 
         const mapped = mapAsanaTask(saved);

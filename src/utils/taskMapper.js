@@ -17,8 +17,8 @@ export function mapAsanaTask(task) {
     name: task.name || "Untitled Task",
     description: task.notes || "No description",
     status: normalizeStatus(section.name),
-    assignee: task.assignee?.gid || null,
-    dueDate: task.due_on || null, //
+    assignee: task.assignee?.gid || "",
+    dueDate: task.due_on || "",
 
     section_name: section.name || null,
     section_gid: section.gid || null,
