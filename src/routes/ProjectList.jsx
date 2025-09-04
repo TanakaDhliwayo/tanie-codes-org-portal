@@ -6,10 +6,10 @@ import Loader from "../components/loader";
 import "../styles/loader.css";
 
 const statusMap = {
-  green: { label: "On track", class: "text-success" },
-  yellow: { label: "At risk", class: "text-warning fw-bold" },
-  red: { label: "Off track", class: "text-danger fw-bold" },
-  complete: { label: "Complete", class: "text-secondary" },
+  green: { label: "On track", style: { color: "#198754", fontWeight: 500 } },
+  yellow: { label: "At risk", style: { color: "#ffff00", fontWeight: 500 } },
+  red: { label: "Off track", style: { color: "red", fontWeight: 500 } },
+  complete: { label: "Complete", style: { color: "#00f5ff", fontWeight: 500 } },
 };
 
 const ProjectList = () => {
@@ -48,17 +48,31 @@ const ProjectList = () => {
       <h2 className="mb-4">TANIE CODES .ORG</h2>
 
       {/* Search bar */}
-      <div className="input-group mb-3" style={{ maxWidth: "400px" }}>
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Search projects..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <span className="input-group-text">
-          <i className="bi bi-search"></i>
-        </span>
+      <div className="d-flex justify-content-center mb-4">
+        <div
+          className="input-group"
+          style={{
+            maxWidth: "500px",
+            backgroundColor: "#E6FEFF",
+            borderRadius: "25px",
+            overflow: "hidden",
+          }}
+        >
+          <input
+            type="text"
+            className="form-control border-0"
+            placeholder="Search projects..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ backgroundColor: "#E6FEFF" }}
+          />
+          <span
+            className="input-group-text border-0"
+            style={{ backgroundColor: "#E6FEFF" }}
+          >
+            <i className="bi bi-search"></i>
+          </span>
+        </div>
       </div>
 
       {/* Table */}
@@ -68,7 +82,7 @@ const ProjectList = () => {
             <th>Name</th>
             <th>Assign</th>
             <th>Status</th>
-            <th></th> {/* View button column */}
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -81,18 +95,17 @@ const ProjectList = () => {
           ) : (
             filteredProjects.map((proj) => (
               <tr key={proj.gid} style={{ borderBottom: "1px solid #ddd" }}>
-                {/* Name */}
                 <td>{proj.name?.trim() || "Untitled Project"}</td>
 
-                {/* First member */}
-                <td>{proj.members?.[0]?.name || "—"}</td>
+                <td>
+                  {proj.members?.length > 0
+                    ? proj.members.map((m) => m.name).join(", ")
+                    : "Unassigned"}
+                </td>
 
-                {/* Status */}
                 <td>
                   {proj.current_status ? (
-                    <span
-                      className={statusMap[proj.current_status.color]?.class}
-                    >
+                    <span style={statusMap[proj.current_status.color]?.style}>
                       {statusMap[proj.current_status.color]?.label || "Unknown"}
                     </span>
                   ) : (
@@ -104,7 +117,7 @@ const ProjectList = () => {
                 <td className="text-end">
                   <button
                     className="btn btn-sm"
-                    style={{ backgroundColor: "#00d5f9", color: "black" }}
+                    style={{ backgroundColor: "#00f5ff", color: "black" }}
                     onClick={() => navigate(`/projects/${proj.gid}`)}
                   >
                     View
