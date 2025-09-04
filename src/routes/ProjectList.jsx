@@ -52,7 +52,7 @@ const ProjectList = () => {
         <div
           className="input-group"
           style={{
-            maxWidth: "500px",
+            width: "70%", // make search bar longer
             backgroundColor: "#E6FEFF",
             borderRadius: "25px",
             overflow: "hidden",
@@ -95,14 +95,32 @@ const ProjectList = () => {
           ) : (
             filteredProjects.map((proj) => (
               <tr key={proj.gid} style={{ borderBottom: "1px solid #ddd" }}>
+                {/* Project Name */}
                 <td>{proj.name?.trim() || "Untitled Project"}</td>
 
+                {/* Assign column (badges for members) */}
                 <td>
-                  {proj.members?.length > 0
-                    ? proj.members.map((m) => m.name).join(", ")
-                    : "Unassigned"}
+                  {proj.members?.length > 0 ? (
+                    proj.members.map((m) => (
+                      <span
+                        key={m.gid}
+                        className="badge bg-light text-dark me-1"
+                        style={{
+                          borderRadius: "15px",
+                          padding: "5px 10px",
+                          fontWeight: 500,
+                          border: "1px solid #ccc",
+                        }}
+                      >
+                        {m.name}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-muted">Unassigned</span>
+                  )}
                 </td>
 
+                {/* Status column */}
                 <td>
                   {proj.current_status ? (
                     <span style={statusMap[proj.current_status.color]?.style}>
