@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { getProjects } from "../api/asana";
 import Loader from "../components/loader";
 import "../styles/loader.css";
+import "bootstrap-icons/font/bootstrap-icons.css"; // ✅ make sure icons load
 
 const statusMap = {
   green: { label: "On track", style: { color: "#198754", fontWeight: 500 } },
@@ -52,7 +53,7 @@ const ProjectList = () => {
         <div
           className="input-group"
           style={{
-            width: "70%", // make search bar longer
+            width: "70%",
             backgroundColor: "#E6FEFF",
             borderRadius: "25px",
             overflow: "hidden",
@@ -98,23 +99,37 @@ const ProjectList = () => {
                 {/* Project Name */}
                 <td>{proj.name?.trim() || "Untitled Project"}</td>
 
-                {/* Assign column (badges for members) */}
+                {/* Assign column (badges + “+more”) */}
                 <td>
                   {proj.members?.length > 0 ? (
-                    proj.members.map((m) => (
-                      <span
-                        key={m.gid}
-                        className="badge bg-light text-dark me-1"
-                        style={{
-                          borderRadius: "15px",
-                          padding: "5px 10px",
-                          fontWeight: 500,
-                          border: "1px solid #ccc",
-                        }}
-                      >
-                        {m.name}
-                      </span>
-                    ))
+                    <>
+                      {proj.members.slice(0, 3).map((m) => (
+                        <span
+                          key={m.gid}
+                          className="badge bg-light text-dark me-1"
+                          style={{
+                            borderRadius: "15px",
+                            padding: "5px 10px",
+                            fontWeight: 500,
+                            border: "1px solid #ccc",
+                          }}
+                        >
+                          {m.name}
+                        </span>
+                      ))}
+                      {proj.members.length > 3 && (
+                        <span
+                          className="badge bg-secondary text-light"
+                          style={{
+                            borderRadius: "15px",
+                            padding: "5px 10px",
+                            fontWeight: 500,
+                          }}
+                        >
+                          +{proj.members.length - 3} more
+                        </span>
+                      )}
+                    </>
                   ) : (
                     <span className="text-muted">Unassigned</span>
                   )}
