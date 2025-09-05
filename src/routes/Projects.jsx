@@ -44,7 +44,7 @@ const Projects = () => {
     })();
   }, []);
 
-  // Load projects and set correct selected one
+  // Load projects and set selectedProject
   useEffect(() => {
     (async () => {
       try {
@@ -54,7 +54,7 @@ const Projects = () => {
         if (projectId) {
           setSelectedProject(projectId);
         } else if (allProjects.length > 0) {
-          setSelectedProject(allProjects[0].gid); // fallback
+          setSelectedProject(allProjects[0].gid);
         }
       } catch (err) {
         console.error("Failed to load projects:", err);

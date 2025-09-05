@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { getProjects } from "../api/asana";
 import Loader from "../components/loader";
 import "../styles/loader.css";
-import "bootstrap-icons/font/bootstrap-icons.css"; 
+import "bootstrap-icons/font/bootstrap-icons.css";
 
 const statusMap = {
   green: { label: "On track", style: { color: "#198754", fontWeight: 500 } },
@@ -81,7 +81,7 @@ const ProjectList = () => {
         <thead>
           <tr>
             <th>Name</th>
-            <th>Assign</th>
+            <th>Members</th>
             <th>Status</th>
             <th></th>
           </tr>
