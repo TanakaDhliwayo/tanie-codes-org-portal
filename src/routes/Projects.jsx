@@ -22,17 +22,14 @@ const Projects = () => {
   const [tasks, setTasks] = useState([]);
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
-
   const [searchQuery, setSearchQuery] = useState("");
   const [filterAssignee, setFilterAssignee] = useState("");
   const [loading, setLoading] = useState(true);
-
   const [activeTask, setActiveTask] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-
   const [users, setUsers] = useState([]);
 
-  // ✅ always load users globally
+  // Load users
   useEffect(() => {
     (async () => {
       try {
@@ -44,55 +41,49 @@ const Projects = () => {
     })();
   }, []);
 
-  // Load projects and default tasks
+  // Load projects and tasks
   useEffect(() => {
     (async () => {
       try {
         const allProjects = await getProjects();
         setProjects(allProjects);
-
         if (allProjects.length > 0) {
           const defaultProject = allProjects[0];
           setSelectedProject(defaultProject.gid);
-
-          const raw = await getTasks(defaultProject.gid);
-          setTasks(raw.map(mapAsanaTask));
         }
-      } catch (e) {
-        console.error("Failed to load projects or tasks:", e);
+      } catch (err) {
+        console.error("Failed to load projects:", err);
       } finally {
         setLoading(false);
       }
     })();
   }, []);
 
-  // Fetch tasks when project changes
+  // Load tasks when selectedProject changes
   useEffect(() => {
     if (!selectedProject) return;
     (async () => {
+      setLoading(true);
       try {
-        setLoading(true);
         const raw = await getTasks(selectedProject);
         setTasks(raw.map(mapAsanaTask));
-      } catch (e) {
-        console.error("Failed to load tasks:", e);
+      } catch (err) {
+        console.error("Failed to load tasks:", err);
       } finally {
         setLoading(false);
       }
     })();
   }, [selectedProject]);
 
-  // Add new task → open modal immediately in edit mode
   const addTask = () => {
-    const draftTask = {
+    setActiveTask({
       id: null,
       name: "",
       description: "",
       status: "To Do",
-      assignee: "", // ✅ empty string
-      dueDate: "", // ✅ empty string
-    };
-    setActiveTask(draftTask);
+      assignee: "",
+      dueDate: "",
+    });
     setIsEditing(true);
   };
 
@@ -133,18 +124,12 @@ const Projects = () => {
     }
   };
 
-  // Modal
   const openTask = (task, edit = false) => {
     setActiveTask(task);
     setIsEditing(edit);
   };
 
   const closeTask = () => {
-    if (activeTask && activeTask.id === null) {
-      setActiveTask(null);
-      setIsEditing(false);
-      return;
-    }
     setActiveTask(null);
     setIsEditing(false);
   };
@@ -156,21 +141,13 @@ const Projects = () => {
     }
 
     try {
-      let saved;
       if (!updated.id) {
-        // creating a new task
+        // Create new task
         const tempId = `temp-${Date.now()}`;
-        const tempTask = {
-          id: tempId,
-          name: updated.name,
-          description: updated.description || "",
-          status: "To Do",
-          assignee: updated.assignee || "",
-          dueDate: updated.dueDate || "",
-        };
+        const tempTask = { ...updated, id: tempId };
         setTasks((prev) => [...prev, tempTask]);
 
-        saved = await createTask(selectedProject, {
+        const saved = await createTask(selectedProject, {
           name: updated.name,
           notes: updated.description || "",
           assignee: updated.assignee || "",
@@ -180,17 +157,16 @@ const Projects = () => {
         const mapped = mapAsanaTask(saved);
         setTasks((prev) => prev.map((t) => (t.id === tempId ? mapped : t)));
       } else {
-        saved = await updateTaskFields(updated.id, selectedProject, {
+        // Update existing task
+        const saved = await updateTaskFields(updated.id, selectedProject, {
           name: updated.name,
           description: updated.description || "",
           assignee: updated.assignee || null,
           dueDate: updated.dueDate || "",
         });
-
         const mapped = mapAsanaTask(saved);
         setTasks((prev) => prev.map((t) => (t.id === mapped.id ? mapped : t)));
       }
-
       closeTask();
     } catch (err) {
       console.error("Save failed:", err);
@@ -216,18 +192,14 @@ const Projects = () => {
               className="form-select"
               style={{ display: "inline-block", width: "auto" }}
             >
-              {loading && projects.length === 0 && (
-                <option disabled>Loading projects...</option>
-              )}
-              {!loading && projects.length === 0 && (
+              {projects.length === 0 && (
                 <option disabled>No projects available</option>
               )}
-              {!loading &&
-                projects.map((proj) => (
-                  <option key={proj.gid} value={proj.gid}>
-                    {proj.name?.trim() || "Untitled Project"}
-                  </option>
-                ))}
+              {projects.map((proj) => (
+                <option key={proj.gid} value={proj.gid}>
+                  {proj.name?.trim() || "Untitled Project"}
+                </option>
+              ))}
             </select>
           </h2>
 
@@ -248,7 +220,6 @@ const Projects = () => {
       <div className="kanban-section">
         <div className="container">
           <KanbanBoard
-            key={tasks.length}
             statuses={STATUSES}
             tasks={filteredTasks}
             users={users}
@@ -268,7 +239,6 @@ const Projects = () => {
           onClose={closeTask}
           onSave={saveTask}
           users={users}
-          disableSave={!activeTask?.name || activeTask.name.trim() === ""}
         />
       )}
     </>

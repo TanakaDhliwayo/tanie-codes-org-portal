@@ -9,8 +9,8 @@ const AddTask = ({ onAdd }) => {
       name: "",
       description: "",
       status: "To Do",
-      assignee: "", // assignee: null,
-      dueDate: "", // dueDate: null,
+      assignee: "", 
+      dueDate: "", 
     };
 
     onAdd(draftTask);

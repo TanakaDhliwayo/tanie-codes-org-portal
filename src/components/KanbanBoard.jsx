@@ -27,7 +27,7 @@ const KanbanBoard = ({
             .filter((t) => t.status === status)
             .map((t) => (
               <TaskCard
-                key={t.id}
+                key={t.id || `task-${Math.random()}`}
                 task={t}
                 users={users} //  pass users
                 onDragStart={onDragStart}
