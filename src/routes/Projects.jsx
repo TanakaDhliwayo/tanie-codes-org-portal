@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useParams } from "react-router-dom"; // 👈 add this
 import SearchBar from "../components/SearchBar";
 import Filter from "../components/Filter";
 import AddTask from "../components/AddTask";
@@ -19,6 +20,8 @@ import "../styles/loader.css";
 const STATUSES = ["To Do", "In Progress", "Done"];
 
 const Projects = () => {
+  const { projectId } = useParams(); // 👈 read projectId from URL
+
   const [tasks, setTasks] = useState([]);
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
@@ -41,15 +44,17 @@ const Projects = () => {
     })();
   }, []);
 
-  // Load projects and tasks
+  // Load projects and set correct selected one
   useEffect(() => {
     (async () => {
       try {
         const allProjects = await getProjects();
         setProjects(allProjects);
-        if (allProjects.length > 0) {
-          const defaultProject = allProjects[0];
-          setSelectedProject(defaultProject.gid);
+
+        if (projectId) {
+          setSelectedProject(projectId);
+        } else if (allProjects.length > 0) {
+          setSelectedProject(allProjects[0].gid); // fallback
         }
       } catch (err) {
         console.error("Failed to load projects:", err);
@@ -57,7 +62,7 @@ const Projects = () => {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [projectId]);
 
   // Load tasks when selectedProject changes
   useEffect(() => {
@@ -140,13 +145,13 @@ const Projects = () => {
       return;
     }
 
-    try {
-      if (!updated.id) {
-        // Create new task
-        const tempId = `temp-${Date.now()}`;
-        const tempTask = { ...updated, id: tempId };
-        setTasks((prev) => [...prev, tempTask]);
+    if (!updated.id) {
+      // Create new task
+      const tempId = `temp-${Date.now()}`;
+      const tempTask = { ...updated, id: tempId };
+      setTasks((prev) => [...prev, tempTask]);
 
+      try {
         const saved = await createTask(selectedProject, {
           name: updated.name,
           notes: updated.description || "",
@@ -156,22 +161,37 @@ const Projects = () => {
 
         const mapped = mapAsanaTask(saved);
         setTasks((prev) => prev.map((t) => (t.id === tempId ? mapped : t)));
-      } else {
-        // Update existing task
+      } catch (err) {
+        console.error("Create failed:", err);
+        alert("Failed to create task. Please try again.");
+        // Rollback temp task
+        setTasks((prev) => prev.filter((t) => t.id !== tempId));
+      }
+    } else {
+      // Update existing task
+      const prevTasks = [...tasks];
+      setTasks((prev) =>
+        prev.map((t) => (t.id === updated.id ? { ...t, ...updated } : t))
+      );
+
+      try {
         const saved = await updateTaskFields(updated.id, selectedProject, {
           name: updated.name,
           description: updated.description || "",
           assignee: updated.assignee || null,
           dueDate: updated.dueDate || "",
         });
+
         const mapped = mapAsanaTask(saved);
         setTasks((prev) => prev.map((t) => (t.id === mapped.id ? mapped : t)));
+      } catch (err) {
+        console.error("Update failed:", err);
+        alert("Failed to save task. Reverting changes.");
+        setTasks(prevTasks); // Rollback
       }
-      closeTask();
-    } catch (err) {
-      console.error("Save failed:", err);
-      alert("Failed to save task. Please try again.");
     }
+
+    closeTask();
   };
 
   if (loading)
