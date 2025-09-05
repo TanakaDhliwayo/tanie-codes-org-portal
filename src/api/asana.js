@@ -52,6 +52,7 @@ export async function getProjects() {
 }
 
 // Update an existing Asana task via Flowgear
+// Update an existing Asana task via Flowgear
 export async function updateTaskFields(taskId, projectId, fields) {
   const response = await fetch(`${BASE_URL}/task/update?auth-key=${AUTH_KEY}`, {
     method: "POST",
@@ -68,12 +69,13 @@ export async function updateTaskFields(taskId, projectId, fields) {
     }),
   });
 
+  const json = await response.json();
+
   if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`Failed to update task: ${err}`);
+    throw new Error(json?.Message || "Failed to update task");
   }
 
-  return response.json();
+  return json.data; // ✅ only return the task object
 }
 
 // Get all users in the workspace
