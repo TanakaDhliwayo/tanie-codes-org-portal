@@ -52,7 +52,6 @@ export async function getProjects() {
 }
 
 // Update an existing Asana task via Flowgear
-// Update an existing Asana task via Flowgear
 export async function updateTaskFields(taskId, projectId, fields) {
   const response = await fetch(`${BASE_URL}/task/update?auth-key=${AUTH_KEY}`, {
     method: "POST",

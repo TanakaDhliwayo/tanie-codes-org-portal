@@ -1,7 +1,7 @@
 /* src/styles/taskCard.css */
 
 /* base card look */
-.task-card {
+.card.task-card {
   border: none;
   border-left: 5px solid #e9ecef;
   border-radius: 12px;

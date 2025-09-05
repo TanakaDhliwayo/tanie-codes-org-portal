@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom"; // 👈 add this
+import { useParams } from "react-router-dom"; //  add this
 import SearchBar from "../components/SearchBar";
 import Filter from "../components/Filter";
 import AddTask from "../components/AddTask";
@@ -16,11 +16,12 @@ import {
 import { mapAsanaTask } from "../utils/taskMapper";
 import Loader from "../components/loader";
 import "../styles/loader.css";
+import "../styles/taskCard.css";
 
 const STATUSES = ["To Do", "In Progress", "Done"];
 
 const Projects = () => {
-  const { projectId } = useParams(); // 👈 read projectId from URL
+  const { projectId } = useParams();
 
   const [tasks, setTasks] = useState([]);
   const [projects, setProjects] = useState([]);
